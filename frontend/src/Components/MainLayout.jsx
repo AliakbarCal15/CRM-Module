@@ -4,6 +4,7 @@ import Header from './Header';
 
 const MainLayout = ({ children, onLogout }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showAccounting, setShowAccounting] = useState(false); // ✅ dropdown toggle
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -37,7 +38,7 @@ const MainLayout = ({ children, onLogout }) => {
               </Link>
 
               <Link
-                to="/tasks"  // ✅ use lowercase and plural to match the route in App.js
+                to="/tasks"
                 className={`hover:bg-gray-700 p-2 rounded text-left ${
                   currentPath === '/tasks' ? 'bg-gray-700' : ''
                 }`}
@@ -45,6 +46,61 @@ const MainLayout = ({ children, onLogout }) => {
               >
                 Tasks
               </Link>
+
+              {/* ✅ ACCOUNTING DROPDOWN */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowAccounting((prev) => !prev)}
+                  className={`w-full text-left hover:bg-gray-700 p-2 rounded ${
+                    currentPath.startsWith('/accounts') || currentPath === '/sales' || currentPath === '/purchase'
+                      ? 'bg-gray-700'
+                      : ''
+                  }`}
+                >
+                  Accounting ▾
+                </button>
+
+                {showAccounting && (
+                  <div className="ml-4 mt-2 flex flex-col space-y-1">
+                    <Link
+                      to="/accounts"
+                      className={`hover:bg-gray-700 p-2 rounded ${
+                        currentPath === '/accounts' ? 'bg-gray-700' : ''
+                      }`}
+                      onClick={() => {
+                        setSidebarOpen(false);
+                        setShowAccounting(false);
+                      }}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/sales"
+                      className={`hover:bg-gray-700 p-2 rounded ${
+                        currentPath === '/sales' ? 'bg-gray-700' : ''
+                      }`}
+                      onClick={() => {
+                        setSidebarOpen(false);
+                        setShowAccounting(false);
+                      }}
+                    >
+                      Sales Entry
+                    </Link>
+                    <Link
+                      to="/purchase"
+                      className={`hover:bg-gray-700 p-2 rounded ${
+                        currentPath === '/purchase' ? 'bg-gray-700' : ''
+                      }`}
+                      onClick={() => {
+                        setSidebarOpen(false);
+                        setShowAccounting(false);
+                      }}
+                    >
+                      Purchase Entry
+                    </Link>
+                  </div>
+                )}
+              </div>
             </nav>
           </div>
 

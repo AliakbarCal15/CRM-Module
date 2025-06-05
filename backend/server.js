@@ -5,7 +5,9 @@ import connectDB from './config/db.js';
 import leadRoutes from './routes/leadRoutes.js';
 import authRoutes from './routes/authRoutes.js'; 
 import taskRoutes from './routes/taskRoutes.js';
-
+import accountRoutes from './routes/accountRoutes.js';
+import purchaseRoutes from './routes/purchaseRoutes.js';
+import salesRoutes from './routes/salesRoutes.js';
 dotenv.config();
 connectDB();
 
@@ -13,11 +15,12 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+app.use('/api/accounts', accountRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/auth', authRoutes); 
 app.use('/api/tasks', taskRoutes); 
-
+app.use('/api/purchases', purchaseRoutes);
+app.use('/api/sales', salesRoutes);
 app.use((req, res) => {
   res.status(404).json({ message: 'API route not found' });
 });

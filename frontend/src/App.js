@@ -8,6 +8,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 import axios from 'axios';
+import { Toaster } from 'react-hot-toast';
 
 import Dashboard from './pages/Dashboard';
 import LeadsPage from './pages/LeadPage';
@@ -19,7 +20,9 @@ import TaskPage from './pages/TaskPage'; // ✅ Import your task main page
 import MainLayout from './Components/MainLayout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-
+import PurchasePage from './pages/PurchasePage';
+import Salespage from './pages/SalesPage'; // ✅ Import sales page
+import AccountsPage from './pages/AccountsPage'; // ✅ Import accounts page
 function AppWrapper() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
@@ -101,45 +104,51 @@ function AppWrapper() {
   }
 
   return (
-    <MainLayout onLogout={handleLogout}>
-      <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route
-          path="/leads"
-          element={
-            !isFormOpen ? (
-              <LeadsPage
-                leads={leads}
-                setLeads={setLeads}
-                onDeleteLead={handleDeleteLead}
-                onOpenForm={(lead) => {
-                  setLeadToEdit(lead);
-                  setIsFormOpen(true);
-                }}
-              />
-            ) : (
-              <AddLeadForm
-                onSubmit={leadToEdit ? handleUpdateLead : handleAddLead}
-                leadToEdit={leadToEdit}
-                closeForm={() => {
-                  setIsFormOpen(false);
-                  setLeadToEdit(null);
-                }}
-              />
-            )
-          }
-        />
-        <Route
-          path="/leads/:id"
-          element={<LeadDetailsPage onDeleteLead={handleDeleteLead} />}
-        />
-        <Route path="/tasks" element={<TaskPage />} /> {/* ✅ Task page route */}
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/" element={<Navigate to="/dashboard" />} />
-        <Route path="*" element={<Navigate to="/dashboard" />} />
-      </Routes>
-    </MainLayout>
+    <>
+      <MainLayout onLogout={handleLogout}>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route
+            path="/leads"
+            element={
+              !isFormOpen ? (
+                <LeadsPage
+                  leads={leads}
+                  setLeads={setLeads}
+                  onDeleteLead={handleDeleteLead}
+                  onOpenForm={(lead) => {
+                    setLeadToEdit(lead);
+                    setIsFormOpen(true);
+                  }}
+                />
+              ) : (
+                <AddLeadForm
+                  onSubmit={leadToEdit ? handleUpdateLead : handleAddLead}
+                  leadToEdit={leadToEdit}
+                  closeForm={() => {
+                    setIsFormOpen(false);
+                    setLeadToEdit(null);
+                  }}
+                />
+              )
+            }
+          />
+          <Route
+            path="/leads/:id"
+            element={<LeadDetailsPage onDeleteLead={handleDeleteLead} />}
+          />
+          <Route path="/tasks" element={<TaskPage />} /> {/* ✅ Task page route */}
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/accounts" element={<AccountsPage />} />
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route path="/purchase" element={<PurchasePage />} />
+          <Route path="*" element={<Navigate to="/dashboard" />} />
+          <Route path="/sales" element={<Salespage />} /> {/* ✅ Sales page route */}
+        </Routes>
+      </MainLayout>
+      <Toaster position="top-right" reverseOrder={false} />
+    </>
   );
 }
 

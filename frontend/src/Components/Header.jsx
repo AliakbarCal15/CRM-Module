@@ -59,6 +59,12 @@ const Header = ({ onMenuClick, onProfileClick, onLogout }) => {
                 >
                   Logout
                 </button>
+                {/* <button
+                  onClick={handleLogoutClick}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100"
+                >
+                  Dummy
+                </button> */}
               </motion.div>
             )}
           </AnimatePresence>
