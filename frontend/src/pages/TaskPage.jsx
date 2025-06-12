@@ -12,6 +12,13 @@ const TaskPage = () => {
   const [taskToEdit, setTaskToEdit] = useState(null);
 
   useEffect(() => {
+    const shouldAutoClick = localStorage.getItem('autoCreateTask');
+  if (shouldAutoClick === 'true') {
+    const btn = document.getElementById('create-task-button');
+    if (btn) btn.click();
+    localStorage.removeItem('autoCreateTask');
+  }
+    // Fetch tasks when the component mounts
     fetchTasks();
   }, []);
 
@@ -68,6 +75,7 @@ const TaskPage = () => {
         <h1 className="text-xl font-semibold">Tasks</h1>
         {!showForm && (
           <button
+            id="create-task-button"
             onClick={handleCreate}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >

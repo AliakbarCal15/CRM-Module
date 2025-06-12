@@ -27,9 +27,40 @@ const AddLeadForm = ({ onSubmit, leadToEdit, closeForm }) => {
     description: '',
   });
 
+  const [users, setUsers] = useState([]); // ✅ Make sure it's always an array
+
+useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/users');
+      const data = await res.json();
+      console.log("Fetched Users →", data); // 👀 DEBUG OUTPUT
+
+      if (Array.isArray(data)) {
+        // Normalize full name regardless of structure
+        const cleaned = data.map(user => ({
+          _id: user._id,
+          firstName: user.firstName || user.name?.first || 'Unknown',
+          lastName: user.lastName || user.name?.last || '',
+        }));
+        setUsers(cleaned);
+      } else {
+        console.warn('User data is not an array:', data);
+        setUsers([]);
+      }
+    } catch (err) {
+      console.error('Error loading users:', err);
+      setUsers([]);
+    }
+  };
+
+  fetchUsers();
+}, []);
+
+
   useEffect(() => {
     if (leadToEdit) {
-      setFormData(prev => ({ ...prev, ...leadToEdit }));
+      setFormData((prev) => ({ ...prev, ...leadToEdit }));
     }
   }, [leadToEdit]);
 
@@ -45,7 +76,7 @@ const AddLeadForm = ({ onSubmit, leadToEdit, closeForm }) => {
     e.preventDefault();
     try {
       await onSubmit(formData);
-      closeForm(); // Close form after successful submit
+      closeForm();
     } catch (error) {
       console.error('Failed to submit lead:', error);
       alert('Error submitting lead. Please try again.');
@@ -62,11 +93,11 @@ const AddLeadForm = ({ onSubmit, leadToEdit, closeForm }) => {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Group 1: Basic Info */}
+        {/* Basic Info */}
         <div>
           <h3 className="text-blue-600 font-medium mb-2">Basic Info</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {['leadOwnerName', 'companyName', 'firstName', 'lastName', 'title', 'email', 'phone'].map((field) => (
+            {['companyName', 'firstName', 'lastName', 'title', 'email', 'phone'].map((field) => (
               <div key={field}>
                 <label className="block text-sm font-medium mb-1">
                   {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
@@ -77,14 +108,37 @@ const AddLeadForm = ({ onSubmit, leadToEdit, closeForm }) => {
                   value={formData[field]}
                   onChange={handleChange}
                   className="w-full p-2 border border-gray-300 rounded"
-                  required={['firstName', 'companyName', 'leadOwnerName', 'email', 'phone'].includes(field)}
+                  required={['firstName', 'companyName', 'email', 'phone'].includes(field)}
                 />
               </div>
             ))}
+
+            {/* ✅ Lead Owner dropdown */}
+            <div>
+  <label className="block text-sm font-medium mb-1">Lead Owner</label>
+  <select
+    name="leadOwnerName"
+    value={formData.leadOwnerName}
+    onChange={handleChange}
+    className="w-full p-2 border border-gray-300 rounded"
+    required
+  >
+    <option value="">Select Owner</option>
+    {users.map((user) => (
+      <option
+        key={user._id}
+        value={`${user.firstName} ${user.middleName || ''} ${user.lastName}`.trim()}
+      >
+        {user.firstName} {user.middleName || ''} {user.lastName}
+      </option>
+    ))}
+  </select>
+</div>
+
           </div>
         </div>
 
-        {/* Group 2: Lead Details */}
+        {/* Lead Details */}
         <div>
           <h3 className="text-blue-600 font-medium mb-2">Lead Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -103,7 +157,6 @@ const AddLeadForm = ({ onSubmit, leadToEdit, closeForm }) => {
               </div>
             ))}
 
-            {/* Status dropdown */}
             <div>
               <label className="block text-sm font-medium mb-1">Status</label>
               <select
@@ -121,7 +174,6 @@ const AddLeadForm = ({ onSubmit, leadToEdit, closeForm }) => {
               </select>
             </div>
 
-            {/* Rating dropdown */}
             <div>
               <label className="block text-sm font-medium mb-1">Rating</label>
               <select
@@ -141,7 +193,7 @@ const AddLeadForm = ({ onSubmit, leadToEdit, closeForm }) => {
           </div>
         </div>
 
-        {/* Group 3: Contact Info */}
+        {/* Contact Info */}
         <div>
           <h3 className="text-blue-600 font-medium mb-2">Contact Info</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -162,7 +214,7 @@ const AddLeadForm = ({ onSubmit, leadToEdit, closeForm }) => {
           </div>
         </div>
 
-        {/* Group 4: Description */}
+        {/* Additional Info */}
         <div>
           <h3 className="text-blue-600 font-medium mb-2">Additional Info</h3>
           <textarea
@@ -175,7 +227,7 @@ const AddLeadForm = ({ onSubmit, leadToEdit, closeForm }) => {
           />
         </div>
 
-        {/* Action Buttons */}
+        {/* Buttons */}
         <div className="flex justify-end gap-3">
           <button
             type="button"

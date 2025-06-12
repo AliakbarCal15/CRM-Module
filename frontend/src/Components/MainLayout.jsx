@@ -98,6 +98,15 @@ const MainLayout = ({ children, onLogout }) => {
                     >
                       Purchase Entry
                     </Link>
+                    <Link
+                to="/invoices"
+                className={`hover:bg-gray-700 p-2 rounded text-left ${
+                  currentPath === '/tasks' ? 'bg-gray-700' : ''
+                }`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                Invoice And Billing
+              </Link>
                   </div>
                 )}
               </div>

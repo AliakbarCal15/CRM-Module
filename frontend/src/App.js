@@ -9,6 +9,8 @@ import {
 } from 'react-router-dom';
 import axios from 'axios';
 import { Toaster } from 'react-hot-toast';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import Dashboard from './pages/Dashboard';
 import LeadsPage from './pages/LeadPage';
@@ -23,6 +25,10 @@ import RegisterPage from './pages/RegisterPage';
 import PurchasePage from './pages/PurchasePage';
 import Salespage from './pages/SalesPage'; // ✅ Import sales page
 import AccountsPage from './pages/AccountsPage'; // ✅ Import accounts page
+import InvoicePage from './pages/InvoicePage';
+import InvoiceTable from './pages/invoice/InvoiceTable';
+import InvoiceDetails from './pages/invoice/InvoiceDetails';
+import InvoiceDashboard from './pages/InvoiceDashboard'; // ✅ Import invoice dashboard
 function AppWrapper() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
@@ -145,8 +151,12 @@ function AppWrapper() {
           <Route path="/purchase" element={<PurchasePage />} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
           <Route path="/sales" element={<Salespage />} /> {/* ✅ Sales page route */}
+          <Route path="/invoices" element={<InvoiceDashboard />} />
+          <Route path="/invoices/all" element={<InvoiceTable />} />          <Route path="/invoices/:id" element={<InvoiceDetails />} />
+          <Route path="/invoices/create" element={<InvoicePage />} />
         </Routes>
       </MainLayout>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
       <Toaster position="top-right" reverseOrder={false} />
     </>
   );

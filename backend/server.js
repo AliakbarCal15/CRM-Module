@@ -8,6 +8,9 @@ import taskRoutes from './routes/taskRoutes.js';
 import accountRoutes from './routes/accountRoutes.js';
 import purchaseRoutes from './routes/purchaseRoutes.js';
 import salesRoutes from './routes/salesRoutes.js';
+import invoiceRoutes from './routes/invoiceRoutes.js';
+import callRoutes from './routes/callRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 dotenv.config();
 connectDB();
 
@@ -21,6 +24,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes); 
 app.use('/api/purchases', purchaseRoutes);
 app.use('/api/sales', salesRoutes);
+app.use('/api/invoices', invoiceRoutes);
+app.use('/api/calls', callRoutes);
+app.use('/api/users', userRoutes);
 app.use((req, res) => {
   res.status(404).json({ message: 'API route not found' });
 });
