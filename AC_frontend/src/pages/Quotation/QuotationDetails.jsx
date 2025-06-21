@@ -7,25 +7,25 @@ const QuotationDetails = () => {
   const [quotation, setQuotation] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchQuotation = async () => {
-      try {
-        const response = await axios.get(`http://localhost:5000/api/quotations/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        setQuotation(response.data);
-      } catch (err) {
-        console.error('Error fetching quotation:', err);
-        if (err.response?.status === 404) {
-          setError('Quotation not found.');
-        } else {
-          setError('Failed to load quotation. Please try again.');
-        }
+  const fetchQuotation = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/quotations/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      setQuotation(response.data);
+    } catch (err) {
+      console.error('Error fetching quotation:', err);
+      if (err.response?.status === 404) {
+        setError('Quotation not found.');
+      } else {
+        setError('Failed to load quotation. Please try again.');
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchQuotation();
   }, [id]);
 
@@ -59,7 +59,7 @@ const QuotationDetails = () => {
 
   const handleSendEmail = async () => {
     try {
-      await axios.post(`http://localhost:5000/api/quotations/send-email/${id}`, {}, {
+      await axios.post(`http://localhost:5000/api/email/send-email/${id}`, {}, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -71,13 +71,30 @@ const QuotationDetails = () => {
     }
   };
 
-  if (error) {
-    return <div className="p-4 text-red-600">{error}</div>;
-  }
+  const handleRestoreVersion = async (versionNumber) => {
+    const confirmRestore = window.confirm(`Are you sure you want to restore version ${versionNumber}?`);
+    if (!confirmRestore) return;
 
-  if (!quotation) {
-    return <div className="p-4">Loading quotation...</div>;
-  }
+    try {
+      await axios.post(
+        `http://localhost:5000/api/quotations/${id}/restore-version/${versionNumber}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      alert(`Version ${versionNumber} restored successfully.`);
+      fetchQuotation(); // Refresh data
+    } catch (error) {
+      console.error('Failed to restore version:', error);
+      alert('Restoration failed. Please try again.');
+    }
+  };
+
+  if (error) return <div className="p-4 text-red-600">{error}</div>;
+  if (!quotation) return <div className="p-4">Loading quotation...</div>;
 
   const {
     quotationId,
@@ -97,16 +114,10 @@ const QuotationDetails = () => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Quotation #{quotationId}</h2>
         <div className="flex gap-2">
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-            onClick={handleDownloadPDF}
-          >
+          <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={handleDownloadPDF}>
             Download PDF
           </button>
-          <button
-            className="bg-green-600 text-white px-4 py-2 rounded"
-            onClick={handleSendEmail}
-          >
+          <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={handleSendEmail}>
             Send via Email
           </button>
         </div>
@@ -119,7 +130,6 @@ const QuotationDetails = () => {
           <p>{customer?.email || '—'}</p>
           <p>{customer?.billingAddress || '—'}</p>
         </div>
-
         <div>
           <h3 className="font-semibold">Quotation Info</h3>
           <p><strong>Status:</strong> {status}</p>
@@ -177,10 +187,16 @@ const QuotationDetails = () => {
             <li>No previous versions found.</li>
           ) : (
             versions.map((v, idx) => (
-              <li key={idx} className="mb-2 border-b pb-2">
+              <li key={idx} className="mb-4 border-b pb-2">
                 <p><strong>Version:</strong> {v.versionNumber}</p>
-                <p><strong>Date:</strong> {v.date ? new Date(v.date).toLocaleString() : '—'}</p>
-                <p><strong>Changes:</strong> {v.notes || '—'}</p>
+                <p><strong>Saved On:</strong> {v.updatedAt ? new Date(v.updatedAt).toLocaleString() : '—'}</p>
+                <p><strong>Notes:</strong> {v.notes || '—'}</p>
+                <button
+                  onClick={() => handleRestoreVersion(v.versionNumber)}
+                  className="mt-2 bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600"
+                >
+                  Restore this version
+                </button>
               </li>
             ))
           )}

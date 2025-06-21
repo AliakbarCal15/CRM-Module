@@ -16,6 +16,7 @@ const generateQuotationId = async () => {
   return `QTN-${String(lastId + 1).padStart(4, '0')}`;
 };
 
+// Create new quotation
 export const createQuotation = async (req, res) => {
   try {
     const {
@@ -26,7 +27,7 @@ export const createQuotation = async (req, res) => {
       items,
       terms,
       attachments,
-      totals,
+      totals
     } = req.body;
 
     if (!customer || !salesRep || !items || !totals || !req.user?._id) {
@@ -50,7 +51,8 @@ export const createQuotation = async (req, res) => {
         {
           action: 'Created',
           user: req.user._id,
-          comment: 'Quotation created.'
+          comment: 'Quotation created.',
+          timestamp: new Date()
         }
       ]
     });
@@ -63,6 +65,7 @@ export const createQuotation = async (req, res) => {
   }
 };
 
+// Get all quotations
 export const getAllQuotations = async (req, res) => {
   try {
     const quotations = await Quotation.find().sort({ createdAt: -1 });
@@ -72,6 +75,7 @@ export const getAllQuotations = async (req, res) => {
   }
 };
 
+// Get a quotation by ID
 export const getQuotationById = async (req, res) => {
   try {
     const quotation = await Quotation.findById(req.params.id);
@@ -82,27 +86,31 @@ export const getQuotationById = async (req, res) => {
   }
 };
 
+// Update a quotation with versioning
 export const updateQuotation = async (req, res) => {
   try {
     const { id } = req.params;
     const quotation = await Quotation.findById(id);
     if (!quotation) return res.status(404).json({ error: 'Quotation not found' });
 
-    // Store current version before update
+    // Store the current state as a new version (deep copied)
     quotation.versions.push({
       versionNumber: quotation.versions.length + 1,
-      items: quotation.items,
-      totals: quotation.totals,
+      items: JSON.parse(JSON.stringify(quotation.items)),
+      totals: JSON.parse(JSON.stringify(quotation.totals)),
       notes: req.body.versionNote || 'Edited quotation',
+      updatedAt: new Date()
     });
 
-    // Update fields
+    // Apply updated fields
     Object.assign(quotation, req.body);
 
+    // Add to activity log
     quotation.activityLog.push({
       action: 'Updated',
-      user: req.body.updatedBy || null,
-      comment: req.body.versionNote || 'Quotation updated'
+      user: req.user?._id || null,
+      comment: req.body.versionNote || 'Quotation updated',
+      timestamp: new Date()
     });
 
     await quotation.save();
@@ -112,6 +120,7 @@ export const updateQuotation = async (req, res) => {
   }
 };
 
+// Delete a quotation
 export const deleteQuotation = async (req, res) => {
   try {
     const deleted = await Quotation.findByIdAndDelete(req.params.id);
@@ -119,5 +128,82 @@ export const deleteQuotation = async (req, res) => {
     res.json({ message: 'Quotation deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete quotation' });
+  }
+};
+
+
+
+// ==============================
+// ✅ VERSION CONTROL ENDPOINTS
+// ==============================
+
+// Get all versions of a quotation
+export const getQuotationVersions = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const quotation = await Quotation.findById(id);
+    if (!quotation) return res.status(404).json({ error: 'Quotation not found' });
+
+    res.json(quotation.versions);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch versions', details: err.message });
+  }
+};
+
+// Get a specific version by version number
+export const getQuotationVersionByNumber = async (req, res) => {
+  try {
+    const { id, versionNumber } = req.params;
+    const quotation = await Quotation.findById(id);
+    if (!quotation) return res.status(404).json({ error: 'Quotation not found' });
+
+    const version = quotation.versions.find(
+      (v) => v.versionNumber === parseInt(versionNumber)
+    );
+
+    if (!version) return res.status(404).json({ error: 'Version not found' });
+
+    res.json(version);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch version', details: err.message });
+  }
+};
+
+// Restore a quotation to a specific version
+export const restoreQuotationVersion = async (req, res) => {
+  try {
+    const { id, versionNumber } = req.params;
+    const quotation = await Quotation.findById(id);
+    if (!quotation) return res.status(404).json({ error: 'Quotation not found' });
+
+    const version = quotation.versions.find(
+      (v) => v.versionNumber === parseInt(versionNumber)
+    );
+    if (!version) return res.status(404).json({ error: 'Version not found' });
+
+    // Backup current state as new version
+    quotation.versions.push({
+      versionNumber: quotation.versions.length + 1,
+      items: JSON.parse(JSON.stringify(quotation.items)),
+      totals: JSON.parse(JSON.stringify(quotation.totals)),
+      notes: 'Auto-saved before restore',
+      updatedAt: new Date()
+    });
+
+    // Restore fields
+    quotation.items = version.items;
+    quotation.totals = version.totals;
+
+    quotation.activityLog.push({
+      action: 'Restored',
+      user: req.user?._id || null,
+      comment: `Restored to version ${versionNumber}`,
+      timestamp: new Date()
+    });
+
+    await quotation.save();
+    res.json({ message: `Restored to version ${versionNumber}`, quotation });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to restore version', details: err.message });
   }
 };

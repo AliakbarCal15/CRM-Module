@@ -1,4 +1,3 @@
-// routes/quotationRoutes.js
 import express from 'express';
 import {
   createQuotation,
@@ -6,32 +5,32 @@ import {
   getQuotationById,
   updateQuotation,
   deleteQuotation,
+  getQuotationVersions,
+  getQuotationVersionByNumber,
+  restoreQuotationVersion
 } from '../controllers/quotationController.js';
 
 import { sendQuotationEmail } from '../controllers/emailController.js';
 import { downloadQuotationPDF } from '../controllers/pdfController.js';
 
 import { protect } from '../middleware/authMiddleware.js';
-import { uploadQuotationAttachment as upload } from '../middleware/upload.js'; // ✅ Named import for quotation
 
 const router = express.Router();
 
-// Quotation CRUD
+// 📌 CRUD Routes
 router.post('/', protect, createQuotation);
 router.get('/', protect, getAllQuotations);
 router.get('/:id', protect, getQuotationById);
 router.put('/:id', protect, updateQuotation);
 router.delete('/:id', protect, deleteQuotation);
 
-// ✅ Send Quotation Email
+// 📧 Email & PDF
 router.post('/:quotationId/send-email', protect, sendQuotationEmail);
-
-// ✅ Download Quotation PDF
 router.get('/:quotationId/download-pdf', protect, downloadQuotationPDF);
 
-// ✅ 📂 Upload Quotation File (future-ready placeholder)
-router.post('/upload', upload.single('file'), (req, res) => {
-  res.status(200).json({ message: 'Upload endpoint ready. Plug controller here.' });
-});
+// 🧾 Version Control
+router.get('/:id/versions', protect, getQuotationVersions);                     // All versions of a quotation
+router.get('/:id/versions/:versionNumber', protect, getQuotationVersionByNumber); // Specific version
+router.post('/:id/restore-version/:versionNumber', protect, restoreQuotationVersion); // Restore
 
 export default router;

@@ -1,13 +1,14 @@
-// ...unchanged imports
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const CreateQuotation = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
 
   const [salesReps, setSalesReps] = useState([]);
   const [loadingSalesReps, setLoadingSalesReps] = useState(true);
+  const [loadingQuotation, setLoadingQuotation] = useState(!!id);
 
   const [form, setForm] = useState({
     customer: {
@@ -40,15 +41,12 @@ const CreateQuotation = () => {
     const fetchSalesReps = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/users/sales-reps', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const { data } = await axios.get('http://localhost:5000/api/users/sales-reps', {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setSalesReps(response.data);
+        setSalesReps(data);
       } catch (err) {
         console.error('Error fetching sales reps:', err);
-        setSalesReps([]);
       } finally {
         setLoadingSalesReps(false);
       }
@@ -56,6 +54,34 @@ const CreateQuotation = () => {
 
     fetchSalesReps();
   }, []);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchQuotation = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const { data } = await axios.get(`http://localhost:5000/api/quotations/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setForm({
+          customer: data.customer,
+          validUntil: data.validUntil?.split('T')[0] || '',
+          currency: data.currency,
+          salesRep: data.salesRep?._id || data.salesRep,
+          items: data.items,
+          terms: data.terms,
+          attachments: data.attachments || [],
+        });
+      } catch (err) {
+        console.error('Error fetching quotation:', err);
+        alert('Failed to load quotation for editing');
+      } finally {
+        setLoadingQuotation(false);
+      }
+    };
+
+    fetchQuotation();
+  }, [id]);
 
   const handleItemChange = (index, field, value) => {
     const items = [...form.items];
@@ -68,7 +94,6 @@ const CreateQuotation = () => {
 
     const subtotal = qty * price * (1 - discount / 100) * (1 + tax / 100);
     items[index].subtotal = parseFloat(subtotal.toFixed(2));
-
     setForm({ ...form, items });
   };
 
@@ -97,10 +122,9 @@ const CreateQuotation = () => {
   };
 
   const calculateTotals = () => {
-    const totalBeforeTax = form.items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
-    const taxAmount = form.items.reduce((acc, item) => acc + ((item.quantity * item.unitPrice) * (item.tax / 100)), 0);
+    const totalBeforeTax = form.items.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
+    const taxAmount = form.items.reduce((acc, item) => acc + item.quantity * item.unitPrice * (item.tax / 100), 0);
     const grandTotal = form.items.reduce((acc, item) => acc + item.subtotal, 0);
-
     return {
       totalBeforeTax: totalBeforeTax.toFixed(2),
       taxAmount: taxAmount.toFixed(2),
@@ -111,40 +135,41 @@ const CreateQuotation = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('token');
       const totals = calculateTotals();
+      const payload = { ...form, totals };
 
       if (!form.salesRep) {
         alert('Please select a Sales Representative');
         return;
       }
 
-      const payload = {
-        ...form,
-        totals,
-      };
+      if (id) {
+        await axios.put(`http://localhost:5000/api/quotations/${id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        alert('Quotation updated!');
+      } else {
+        await axios.post('http://localhost:5000/api/quotations', payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        alert('Quotation created!');
+      }
 
-      const token = localStorage.getItem('token');
-
-      await axios.post('http://localhost:5000/api/quotations', payload, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      alert('Quotation created!');
       navigate('/quotations');
     } catch (error) {
-      console.error('Error creating quotation:', error);
-      alert('Failed to create quotation');
+      console.error('Error saving quotation:', error);
+      alert('Failed to save quotation');
     }
   };
 
   const { totalBeforeTax, taxAmount, grandTotal } = calculateTotals();
 
+  if (loadingQuotation) return <div className="p-4">Loading...</div>;
+
   return (
     <div className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Create Quotation</h2>
+      <h2 className="text-xl font-semibold mb-4">{id ? 'Edit Quotation' : 'Create Quotation'}</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
 
         {/* Customer Info */}
@@ -159,7 +184,6 @@ const CreateQuotation = () => {
             onChange={(e) => setForm({ ...form, customer: { ...form.customer, billingAddress: e.target.value } })} />
         </div>
 
-        {/* Validity */}
         <input type="date" value={form.validUntil}
           onChange={(e) => setForm({ ...form, validUntil: e.target.value })} required />
 
@@ -222,14 +246,23 @@ const CreateQuotation = () => {
           <p><strong>Grand Total: ₹ {grandTotal}</strong></p>
         </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={form.items.length === 0}
-          className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
-        >
-          Save Quotation
-        </button>
+        {/* Action Buttons */}
+        <div className="flex justify-between items-center">
+          <button
+            type="button"
+            onClick={() => navigate('/quotations')}
+            className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
+          >
+            ← Back
+          </button>
+          <button
+            type="submit"
+            disabled={form.items.length === 0}
+            className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {id ? 'Update Quotation' : 'Save Quotation'}
+          </button>
+        </div>
       </form>
     </div>
   );

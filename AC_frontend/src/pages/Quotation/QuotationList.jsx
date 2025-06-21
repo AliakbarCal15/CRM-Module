@@ -14,7 +14,7 @@ const QuotationList = () => {
     try {
       const { data } = await axios.get('http://localhost:5000/api/quotations', {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}` // Optional
+          Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
       setQuotations(data);
@@ -113,15 +113,26 @@ const QuotationList = () => {
                   <td className="p-2 border">{q.status}</td>
                   <td className="p-2 border">₹ {q.totals?.grandTotal}</td>
                   <td className="p-2 border">
-                    <button
-                      className="text-blue-600 underline"
-                      onClick={(e) => {
-                        e.stopPropagation(); // prevent row click
-                        navigate(`/quotations/${q._id}`);
-                      }}
-                    >
-                      View
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        className="text-blue-600 underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/quotations/${q._id}`);
+                        }}
+                      >
+                        View
+                      </button>
+                      <button
+                        className="text-green-600 underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/quotations/edit/${q._id}`);
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

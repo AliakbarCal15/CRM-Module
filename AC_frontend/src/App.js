@@ -12,7 +12,7 @@ import { Toaster } from 'react-hot-toast';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Pages and Components
+// Pages - Aliakbar + Partner
 import Dashboard from './pages/Dashboard';
 import LeadsPage from './pages/LeadPage';
 import LeadDetailsPage from './pages/LeadDetailsPage';
@@ -20,9 +20,8 @@ import AddLeadForm from './Components/AddLeadForm';
 import Settings from './pages/Settings';
 import ProfilePage from './pages/Profile';
 import TaskPage from './pages/TaskPage';
-import MainLayout from './Components/MainLayout';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
+import CreateTaskPage from './pages/CreateTaskPage';
+import TaskDetailsPage from './pages/TaskDetailsPage';
 import SalesPage from './pages/SalesPage';
 import PurchasePage from './pages/PurchasePage';
 import AccountsPage from './pages/AccountsPage';
@@ -30,13 +29,14 @@ import InvoiceDashboard from './pages/invoice/InvoiceDashboard';
 import InvoicePage from './pages/invoice/InvoicePage';
 import InvoiceTable from './pages/invoice/InvoiceTable';
 import InvoiceDetails from './pages/invoice/InvoiceDetails';
-
-// Partner's Pages
-import CreateTaskPage from './pages/CreateTaskPage';
-import TaskDetailsPage from './pages/TaskDetailsPage';
 import QuotationList from './pages/Quotation/QuotationList';
 import CreateQuotationForm from './pages/Quotation/CreateQuotation';
 import QuotationDetails from './pages/Quotation/QuotationDetails';
+
+// Auth & Layout
+import MainLayout from './Components/MainLayout';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
 function AppWrapper() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -162,7 +162,7 @@ function AppWrapper() {
           <Route path="/tasks/create" element={<CreateTaskPage />} />
           <Route path="/tasks/:id" element={<TaskDetailsPage />} />
 
-          {/* Accounts, Sales, Purchase */}
+          {/* Accounts */}
           <Route path="/accounts" element={<AccountsPage />} />
           <Route path="/sales" element={<SalesPage />} />
           <Route path="/purchase" element={<PurchasePage />} />
@@ -176,9 +176,10 @@ function AppWrapper() {
           {/* Quotations */}
           <Route path="/quotations" element={<QuotationList />} />
           <Route path="/quotations/create" element={<CreateQuotationForm />} />
+          <Route path="/quotations/edit/:id" element={<CreateQuotationForm />} />
           <Route path="/quotations/:id" element={<QuotationDetails />} />
 
-          {/* Settings & Profile */}
+          {/* Settings / Profile */}
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<ProfilePage />} />
 

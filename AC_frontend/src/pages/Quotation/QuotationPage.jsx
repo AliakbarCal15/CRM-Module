@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import QuotationList from 'QuotationList';
-
 const QuotationPage = () => {
   const navigate = useNavigate();
 
